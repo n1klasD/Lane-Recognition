@@ -1,10 +1,18 @@
-import numpy as np
 import cv2 as cv
 
 import config
+from CVPipeline import PerspectiveTransform
 
 
 def main():
+    # helpers
+    test = PerspectiveTransform()
+
+    # variables
+    debug = False
+
+    # main loop
+
     cap = cv.VideoCapture('resources/Udacity/project_video.mp4')
     # Check if camera opened successfully
     if not cap.isOpened():
@@ -14,19 +22,27 @@ def main():
         # Capture frame-by-frame
         ret, frame = cap.read()
         if ret:
+
             # transform frame here
+            mod_frame = test.transform(frame)
+
+            if config.DEBUG:
+                cv.imshow('Lane Recognition', mod_frame)
 
             # Display the resulting frame
-            cv.imshow('Frame', frame)
+            cv.imshow('Normal video', frame)
 
-            # show one frame at a time in debug mode
-            key = cv.waitKey(0)
-            if config.DEBUG:
-                while key not in [ord('q'), ord('s')]:
-                    key = cv.waitKey(0)
+            key = cv.waitKey(25)
+            if debug:
+                while key not in [ord('q'), ord('s'), ord('d')]:
+                    key = cv.waitKey(10)
             # Quit when 'q' is pressed
             if key == ord('q'):
                 break
+
+            # show one frame at a time(s) in debug mode(toggle with d)
+            if key == ord('d'):
+                debug = not debug
         # Break the loop
         else:
             break
