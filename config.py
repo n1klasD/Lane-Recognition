@@ -16,7 +16,7 @@ destination_points = [[300, 720], [980, 720], [980, 0], [300, 0]]
 # Camera Calibration
 
 # Start debug mode
-CALIBRATION_DEBUG = True
+CALIBRATION_DEBUG = False
 # Path to camera calibration images (folder, that must contain jpg images)
 calibration_images_path = 'resources/Udacity/calib'
 

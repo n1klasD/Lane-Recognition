@@ -5,11 +5,12 @@ import cv2 as cv
 import config
 from CVPipeline import PerspectiveTransform
 from CVPipeline import Calibration
+from CVPipeline import ROI
 
 
 def main():
     # variables
-    debug = True
+    debug = False
 
     # camera calibration
     # get calibration images
@@ -23,13 +24,16 @@ def main():
     perspective_transform = PerspectiveTransform()
     perspective_transform.set_source_points(undistorted_points)
 
-
-
     # open video
     cap = cv.VideoCapture('resources/Udacity/project_video.mp4')
     # Check if camera opened successfully
     if not cap.isOpened():
         print("Error opening video stream or file")
+    video_width = cap.get(cv.CAP_PROP_FRAME_WIDTH)
+    video_height = cap.get(cv.CAP_PROP_FRAME_HEIGHT)
+
+    # ROI
+    roi = ROI(video_width, video_height, distance_to_middle=90, bottom_dist_side=70, top_dist_side=360)
 
     # main loop
     # Read until video is completed
@@ -48,6 +52,7 @@ def main():
             # transform frame here
             # -----------------------------------------
 
+            frame = roi.apply_roi(frame)
             frame = camera_calibration.undistort(frame, fix_roi=False)
             modified_frame = perspective_transform.transform(frame)
 
