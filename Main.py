@@ -1,36 +1,65 @@
+import glob
+
 import cv2 as cv
 
 import config
 from CVPipeline import PerspectiveTransform
+from CVPipeline import Calibration
 
 
 def main():
-    # helpers
-    test = PerspectiveTransform()
-
     # variables
-    debug = False
+    debug = True
 
-    # main loop
+    # camera calibration
+    # get calibration images
+    calibration_images = glob.glob(config.calibration_images_path + '/*.jpg')
+    camera_calibration = Calibration()
+    camera_calibration.calibrate(calibration_images)
+    print("Calibration successful!")
 
+    # apply to calibration to the source points that are used for the perspective transformation
+    undistorted_points = camera_calibration.undistortPoints(config.sources_points)
+    perspective_transform = PerspectiveTransform()
+    perspective_transform.set_source_points(undistorted_points)
+
+
+
+    # open video
     cap = cv.VideoCapture('resources/Udacity/project_video.mp4')
     # Check if camera opened successfully
     if not cap.isOpened():
         print("Error opening video stream or file")
+
+    # main loop
     # Read until video is completed
     while cap.isOpened():
         # Capture frame-by-frame
         ret, frame = cap.read()
         if ret:
 
+            # debugging, show points of perspective transformation
+            if config.PERSPECTIVE_DEBUG:
+                for x, y in config.sources_points:
+                    cv.circle(frame, (x, y), 2, (0, 0, 255), -1)
+
+            cv.imshow('Normal video', frame)
+
             # transform frame here
-            mod_frame = test.transform(frame)
+            # -----------------------------------------
+
+            frame = camera_calibration.undistort(frame, fix_roi=False)
+            modified_frame = perspective_transform.transform(frame)
+
+            # -----------------------------------------
+            # don´t touch the code below
 
             if config.DEBUG:
-                cv.imshow('Lane Recognition', mod_frame)
+                cv.imshow('Perspective Transformation', modified_frame)
 
+            # normal video
             # Display the resulting frame
-            cv.imshow('Normal video', frame)
+            cv.imshow('Camera Calibrated', frame)
 
             key = cv.waitKey(25)
             if debug:
