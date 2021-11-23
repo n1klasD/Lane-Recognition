@@ -6,6 +6,7 @@ import config
 from CVPipeline import PerspectiveTransform
 from CVPipeline import Calibration
 from CVPipeline import ROI
+from CVPipeline import Pipeline
 
 
 def main():
@@ -26,13 +27,21 @@ def main():
 
     # open video
     cap = cv.VideoCapture('resources/Udacity/project_video.mp4')
+
+    # configure camera
+    cap.set(cv.CAP_PROP_FPS, 240)
+    # start video playback at critical point, where street changes color
+    START_POINT = 0 # Start
+    # START_POINT = 500 # first critical part
+    cap.set(cv.CAP_PROP_POS_FRAMES, START_POINT)
+
     # Check if camera opened successfully
     if not cap.isOpened():
         print("Error opening video stream or file")
     video_width = cap.get(cv.CAP_PROP_FRAME_WIDTH)
     video_height = cap.get(cv.CAP_PROP_FRAME_HEIGHT)
 
-    # ROI
+    # initialize ROI
     roi = ROI(video_width, video_height, distance_to_middle=90, bottom_dist_side=70, top_dist_side=360)
 
     # main loop
@@ -52,24 +61,42 @@ def main():
             # transform frame here
             # -----------------------------------------
 
+            # crop a ROI from the image
             frame = roi.apply_roi(frame)
+            # maybe also crop video
+
+            # apply the camera calibration
             frame = camera_calibration.undistort(frame, fix_roi=False)
+
+            # apply the perspective transform
             modified_frame = perspective_transform.transform(frame)
+
+            # segment yellow lane
+            yellow_lane = Pipeline.extract_yellow_lane(modified_frame)
+            cv.imshow("Yellow lane", yellow_lane)
+
+            # segment white lane
+            white_lane = Pipeline.extract_white_lane(modified_frame)
+            cv.imshow("White Lane", white_lane)
+
+            # combine white and yellow lane
+            gray_yellow = cv.cvtColor(yellow_lane, cv.COLOR_RGB2GRAY)
+            modified_frame = cv.bitwise_or(gray_yellow, white_lane)
 
             # -----------------------------------------
             # don´t touch the code below
 
             if config.DEBUG:
-                cv.imshow('Perspective Transformation', modified_frame)
+                cv.imshow('CV', modified_frame)
 
             # normal video
             # Display the resulting frame
-            cv.imshow('Camera Calibrated', frame)
+            # cv.imshow('Camera Calibrated', frame)
 
-            key = cv.waitKey(25)
+            key = cv.waitKey(1)
             if debug:
                 while key not in [ord('q'), ord('s'), ord('d')]:
-                    key = cv.waitKey(10)
+                    key = cv.waitKey(1)
             # Quit when 'q' is pressed
             if key == ord('q'):
                 break
