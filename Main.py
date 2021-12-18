@@ -103,12 +103,11 @@ def main():
             # curve transformation
             x1, y1 = CurveFitter.fit_curve_polyfit(yellow_lane)
             x2, y2 = CurveFitter.fit_curve_polyfit(white_lane)
-
-            frame[x1, y1] = 255
-            frame[x2, y2] = 255
-
+            frame = CurveFitter.draw_area(frame,x1,y1,x2,y2)
+            frame[x1,y1] = (0,0,255)
+            frame[x2,y2] = (0,0,255)
+            
             cv.imshow("curved", frame)
-
             # ---------- Transform the %resulting images perspective ----------- #
 
             cv.imshow('Lane Detection', modified_frame)
@@ -123,7 +122,7 @@ def main():
 
             # normal video
             # Display the resulting frame
-
+            
             key = cv.waitKey(1)
             if debug:
                 while key not in [ord('q'), ord('s'), ord('d')]:
