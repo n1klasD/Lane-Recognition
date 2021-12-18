@@ -85,10 +85,9 @@ class Pipeline:
         """
         minVal = 150
         maxVal = 200
-        sobelKernelSize = 3
-        equation = False # True should be better
+        equation = True # True should be better
 
-        return cv.Canny(frame, minVal, maxVal)
+        return cv.Canny(frame, minVal, maxVal, edges=equation)
 
     @staticmethod
     def hough_lines(frame):

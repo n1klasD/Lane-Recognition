@@ -13,16 +13,21 @@ def main():
     # variables
     debug = False
 
+    perspective_transform = PerspectiveTransform()
+    camera_calibration = Calibration()
+
     # camera calibration
     # get calibration images
-    calibration_images = glob.glob(config.calibration_images_path + '/*.jpg')
-    camera_calibration = Calibration()
-    camera_calibration.calibrate(calibration_images)
+    if config.ACTIVATE_CAMERA_CALIBRATION:
+        calibration_images = glob.glob(config.calibration_images_path + '/*.jpg')
+        camera_calibration.calibrate(calibration_images)
+        # apply calibration to the source points that are used for the perspective transformation
+        undistorted_points = camera_calibration.undistortPoints(config.sources_points)
 
-    # apply calibration to the source points that are used for the perspective transformation
-    undistorted_points = camera_calibration.undistortPoints(config.sources_points)
-    perspective_transform = PerspectiveTransform()
-    perspective_transform.set_source_points(undistorted_points)
+        #
+        perspective_transform.set_source_points(undistorted_points)
+    else:
+        perspective_transform.set_source_points(config.sources_points)
 
     # open video
     cap = cv.VideoCapture('resources/Udacity/project_video.mp4')
@@ -61,11 +66,12 @@ def main():
             # -----------------------------------------
 
             # crop a ROI from the image
-            frame_roi = roi.apply_roi(frame)
+            modified_frame = roi.apply_roi(frame)
             # maybe also crop video
 
             # apply the camera calibration
-            modified_frame = camera_calibration.undistort(frame_roi, fix_roi=False)
+            if config.ACTIVATE_CAMERA_CALIBRATION:
+                modified_frame = camera_calibration.undistort(modified_frame, fix_roi=False)
 
             # segment yellow lane
             yellow_lane = Pipeline.extract_yellow_lane(modified_frame)
@@ -81,8 +87,6 @@ def main():
             # combine white and yellow lane
             gray_yellow = cv.cvtColor(yellow_lane, cv.COLOR_RGB2GRAY)
             frame = cv.bitwise_or(gray_yellow, white_lane)
-
-
 
             # ---------- Transform the resulting images perspective ----------- #
 
