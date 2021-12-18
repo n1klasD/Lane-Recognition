@@ -1,6 +1,9 @@
 """
 Script for Configuration Variables
 """
+# Image properties
+VIDEO_HEIGHT = 720
+VIDEO_WIDTH = 1280
 
 # Enter debug mode
 DEBUG = True
@@ -22,7 +25,5 @@ CALIBRATION_DEBUG = False
 calibration_images_path = 'resources/Udacity/calib'
 
 # ROI Points
-roi_points = [[],[],[],[]]
-
-
-
+outer_roi_points = [[110, 665], [1230, 665], [780, 440], [545, 440]]
+inner_roi_points = [[670, 470], [440, 665], [930, 665]]

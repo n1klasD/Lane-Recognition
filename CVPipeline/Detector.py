@@ -69,9 +69,7 @@ class Pipeline:
         # improve the contrast of the frame by applying a linear point operation using a lookup table
         improved_contrast = cv.LUT(frame, lookup_table_contrast)
 
-        # cv.imshow("Contrast", improved_contrast)
-
-        # select the white lines using thresholding
+        # select the white lines/s using thresholding
         ret, new_frame = cv.threshold(improved_contrast, thresh=THRESH_LOWER, maxval=THRESH_UPPER,
                                       type=cv.THRESH_BINARY)
         frame[new_frame == 0] = 0

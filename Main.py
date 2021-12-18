@@ -46,7 +46,8 @@ def main():
     video_height = cap.get(cv.CAP_PROP_FRAME_HEIGHT)
 
     # initialize ROI
-    roi = ROI(video_width, video_height, distance_to_middle=90, bottom_dist_side=30, top_dist_side=420)
+    # roi = ROI(video_width, video_height, distance_to_middle=90, bottom_dist_side=30, top_dist_side=420)
+    roi = ROI()
 
     # main loop
     # Read until video is completed
@@ -87,11 +88,13 @@ def main():
 
             # combine white and yellow lane
             gray_yellow = cv.cvtColor(yellow_lane, cv.COLOR_RGB2GRAY)
-            frame = cv.bitwise_or(gray_yellow, white_lane)
+            modified_frame = cv.bitwise_or(gray_yellow, white_lane)
+
+            modified_frame = cv.bitwise_or(canny, modified_frame)
 
             # ---------- Transform the resulting images perspective ----------- #
 
-            cv.imshow('Lane Detection', frame)
+            cv.imshow('Lane Detection', modified_frame)
 
             # apply the perspective transform
             frame = perspective_transform.transform(frame)
