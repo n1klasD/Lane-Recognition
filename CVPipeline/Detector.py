@@ -109,7 +109,7 @@ class Pipeline:
             minVal = int(max(0, (1.0 - sigma) * v))
             maxVal = int(min(255, (1.0 + sigma) * v))
         else:
-            minVal = 100
+            minVal = 150
             maxVal = 200
 
         return cv.Canny(frame, minVal, maxVal, edges=True)
@@ -121,3 +121,16 @@ class Pipeline:
         """
 
         return cv.GaussianBlur(frame, (3, 3), sigmaX=0, sigmaY=0)
+
+    @staticmethod
+    def split_left_right(frame):
+        half_width = frame.shape[1] // 2
+        width = frame.shape[1]
+
+        frame_left = frame.copy()
+        frame_right = frame.copy()
+
+        frame_left[:, half_width:width] = 0
+        frame_right[:, 0:half_width + 10] = 0
+
+        return frame_right, frame_left
