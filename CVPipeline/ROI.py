@@ -37,7 +37,7 @@ class ROI:
         self.mask_gray = mask_gray
 
     def apply_roi(self, img):
-        masked
+        masked = None
 
         if len(img.shape) == 2:
             masked = cv.bitwise_and(self.mask_gray, img)
