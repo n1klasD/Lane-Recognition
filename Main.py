@@ -3,6 +3,7 @@ import cv2 as cv
 import numpy as np
 from CVPipeline.CurveFitter import CurveFitter
 import config
+import CVPipeline
 from CVPipeline import PerspectiveTransform
 from CVPipeline import Calibration
 from CVPipeline import ROI
@@ -14,6 +15,10 @@ def main():
     debug = False
     perspective_transform = PerspectiveTransform()
     camera_calibration = Calibration()
+
+    optimizer = CVPipeline.Optimizer(1.4, max_cached_frames=15)
+    measurement = CVPipeline.Measurement(target_time=50)
+
     # camera calibration
     # get calibration images
     if config.ACTIVATE_CAMERA_CALIBRATION:
@@ -44,6 +49,8 @@ def main():
     # main loop
     # Read until video is completed
     while cap.isOpened():
+        measurement.beginFrame()
+
         # Capture frame-by-frame
         ret, frame = cap.read()
         if ret:
@@ -57,17 +64,24 @@ def main():
             # blurring
             modified_frame = Pipeline.gaussian_blur(frame)
             # crop a ROI from the image
-            modified_frame = roi.apply_roi(modified_frame)
+            modified_frame = roi.apply_roi(modified_frame, do_crop=False)
             # cv.imshow("ROI", modified_frame)
             # todo: maybe also crop video
             # apply the camera calibration
             if config.ACTIVATE_CAMERA_CALIBRATION:
                 modified_frame = camera_calibration.undistort(modified_frame, fix_roi=False)
+
             # segment yellow lane
+            yellow_timing = measurement.measure('Yellow')
             yellow_lane = Pipeline.extract_yellow_lane(modified_frame)
-            # cv.imshow("Yellow lane", yellow_lane)
+            yellow_timing.finish()
+            # cv.imshow("Yellow Lane", yellow_lane)
+
+
             # segment white lane
+            white_timing = measurement.measure('White')
             white_lane = Pipeline.extract_white_lane(modified_frame)
+            white_timing.finish()
             # cv.imshow("White Lane", white_lane)
 
             # combine white and yellow lane
@@ -84,6 +98,8 @@ def main():
             # canny = roi.apply_roi(canny)
             cv.imshow("Canny", canny)
 
+            curve_timing = measurement.measure('Curve Fitting')
+
             # curve transformation
             left, right = Pipeline.split_left_right(canny)
             # cv.imshow("left", left)
@@ -93,12 +109,27 @@ def main():
             frame = CurveFitter.draw_area(frame, x1, y1, x2, y2)
             frame[x1, y1] = (0, 0, 255)
             frame[x2, y2] = (0, 0, 255)
-
+            curve_timing.finish()
+            
             cv.imshow("curved", frame)
             # ---------- Transform the %resulting images perspective ----------- #
             cv.imshow('Lane Detection', modified_frame)
+
+            measurement.endFrame()
+            final_frame = frame.copy()
+
+            measurement.drawFrameTiming(final_frame)
+            measurement.drawTiming(final_frame, yellow_timing, 2)
+            measurement.drawTiming(final_frame, white_timing, 1)
+            measurement.drawTiming(final_frame, curve_timing, 0)
+
+            cv.imshow('Final', final_frame)
+
             # apply the perspective transform
             frame = perspective_transform.transform(frame)
+
+
+
             # cv.imshow('perspective transform', frame)
             # -----------------------------------------
             # don´t touch the code below
