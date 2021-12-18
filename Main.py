@@ -1,6 +1,8 @@
 import glob
 
 import cv2 as cv
+import numpy as np
+from CVPipeline.CurveFitter import CurveFitter
 
 import config
 from CVPipeline import PerspectiveTransform
@@ -75,11 +77,11 @@ def main():
 
             # segment yellow lane
             yellow_lane = Pipeline.extract_yellow_lane(modified_frame)
-            # cv.imshow("Yellow lane", yellow_lane)
+            cv.imshow("Yellow lane", yellow_lane)
 
             # segment white lane
             white_lane = Pipeline.extract_white_lane(modified_frame)
-            # cv.imshow("White Lane", white_lane)
+            cv.imshow("White Lane", white_lane)
 
             # make canny edge detection and apply the roi to it
             canny = Pipeline.canny_edge_detection(frame)
@@ -90,9 +92,23 @@ def main():
             gray_yellow = cv.cvtColor(yellow_lane, cv.COLOR_RGB2GRAY)
             modified_frame = cv.bitwise_or(gray_yellow, white_lane)
 
+            # combine canny and white/yellow
             modified_frame = cv.bitwise_or(canny, modified_frame)
 
-            # ---------- Transform the resulting images perspective ----------- #
+            # curve transformation
+            #curved_white = CurveFitter.fit_curve_polyfit(white_lane)
+            x1,y1 = CurveFitter.fit_curve_polyfit(gray_yellow)
+            x2,y2 = CurveFitter.fit_curve_polyfit(white_lane)
+            
+            frame[x1,y1] = 255
+            frame[x2,y2] = 255
+            #frame_curves = cv.bitwise_or(curved_white,curved_yellow)
+
+            cv.imshow("curved",frame)
+
+
+            
+            # ---------- Transform the %resulting images perspective ----------- #
 
             cv.imshow('Lane Detection', modified_frame)
 
