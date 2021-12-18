@@ -20,5 +20,8 @@ CALIBRATION_DEBUG = False
 # Path to camera calibration images (folder, that must contain jpg images)
 calibration_images_path = 'resources/Udacity/calib'
 
+# ROI Points
+roi_points = [[],[],[],[]]
+
 
 

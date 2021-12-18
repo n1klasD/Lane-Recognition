@@ -18,9 +18,8 @@ def main():
     calibration_images = glob.glob(config.calibration_images_path + '/*.jpg')
     camera_calibration = Calibration()
     camera_calibration.calibrate(calibration_images)
-    print("Calibration successful!")
 
-    # apply to calibration to the source points that are used for the perspective transformation
+    # apply calibration to the source points that are used for the perspective transformation
     undistorted_points = camera_calibration.undistortPoints(config.sources_points)
     perspective_transform = PerspectiveTransform()
     perspective_transform.set_source_points(undistorted_points)
@@ -42,7 +41,7 @@ def main():
     video_height = cap.get(cv.CAP_PROP_FRAME_HEIGHT)
 
     # initialize ROI
-    roi = ROI(video_width, video_height, distance_to_middle=90, bottom_dist_side=70, top_dist_side=360)
+    roi = ROI(video_width, video_height, distance_to_middle=90, bottom_dist_side=30, top_dist_side=420)
 
     # main loop
     # Read until video is completed
@@ -56,42 +55,49 @@ def main():
                 for x, y in config.sources_points:
                     cv.circle(frame, (x, y), 2, (0, 0, 255), -1)
 
-            cv.imshow('Normal video', frame)
+            cv.imshow('Normal video', roi.draw_roi(frame))
 
             # transform frame here
             # -----------------------------------------
 
             # crop a ROI from the image
-            frame = roi.apply_roi(frame)
+            frame_roi = roi.apply_roi(frame)
             # maybe also crop video
 
             # apply the camera calibration
-            frame = camera_calibration.undistort(frame, fix_roi=False)
-
-            # apply the perspective transform
-            modified_frame = perspective_transform.transform(frame)
+            modified_frame = camera_calibration.undistort(frame_roi, fix_roi=False)
 
             # segment yellow lane
             yellow_lane = Pipeline.extract_yellow_lane(modified_frame)
-            cv.imshow("Yellow lane", yellow_lane)
+            # cv.imshow("Yellow lane", yellow_lane)
 
             # segment white lane
             white_lane = Pipeline.extract_white_lane(modified_frame)
-            cv.imshow("White Lane", white_lane)
+            # cv.imshow("White Lane", white_lane)
+
+            canny = Pipeline.canny_edge_detection(frame)
+            cv.imshow("Canny", canny)
 
             # combine white and yellow lane
             gray_yellow = cv.cvtColor(yellow_lane, cv.COLOR_RGB2GRAY)
-            modified_frame = cv.bitwise_or(gray_yellow, white_lane)
+            frame = cv.bitwise_or(gray_yellow, white_lane)
+
+
+
+            # ---------- Transform the resulting images perspective ----------- #
+
+            cv.imshow('Lane Detection', frame)
+
+            # apply the perspective transform
+            frame = perspective_transform.transform(frame)
+
+            cv.imshow('perspective transform', frame)
 
             # -----------------------------------------
             # don´t touch the code below
 
-            if config.DEBUG:
-                cv.imshow('CV', modified_frame)
-
             # normal video
             # Display the resulting frame
-            # cv.imshow('Camera Calibrated', frame)
 
             key = cv.waitKey(1)
             if debug:

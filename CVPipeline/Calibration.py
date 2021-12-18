@@ -38,8 +38,6 @@ class Calibration:
         img = None
 
         for fname in images:
-            if config.CALIBRATION_DEBUG:
-                print(f"Evaluating: {fname}")
 
             img = cv.imread(fname, cv.IMREAD_GRAYSCALE)
             # Find the chess board corners
@@ -57,9 +55,11 @@ class Calibration:
                     cv.drawChessboardCorners(img, (self.grid_y, self.grid_x), corners2, ret)
                     cv.imshow('img', img)
                     cv.waitKey(10)
-                    print("\t--> good")
-            elif config.CALIBRATION_DEBUG:
-                print("\t--> faulty")
+                print(f"[Calibration]: {fname} --> good")
+            else:
+                print(f"[Calibration]: {fname} --> faulty")
+
+        print("[Calibration]: Successful")
 
         # calibration
         ret, self.mtx, self.dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, img.shape[::-1], None, None)

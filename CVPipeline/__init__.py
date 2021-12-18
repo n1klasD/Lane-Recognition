@@ -1,4 +1,4 @@
 from .Calibration import Calibration
 from .PerspectiveTransform import PerspectiveTransform
-from .Pipeline import Pipeline
+from .Detector import Pipeline
 from .ROI import ROI
