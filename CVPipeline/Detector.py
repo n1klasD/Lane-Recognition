@@ -59,7 +59,7 @@ class Pipeline:
         return new_frame
 
     @staticmethod
-    def extract_white_lane(frame):
+    def extract_white_lane2(frame):
         """
 
         """
@@ -69,6 +69,8 @@ class Pipeline:
         # improve the contrast of the frame by applying a linear point operation using a lookup table
         improved_contrast = cv.LUT(frame, lookup_table_contrast)
 
+        cv.imshow("Test", improved_contrast)
+
         # select the white lines/s using thresholding
         ret, new_frame = cv.threshold(improved_contrast, thresh=THRESH_LOWER, maxval=THRESH_UPPER,
                                       type=cv.THRESH_BINARY)
@@ -76,6 +78,23 @@ class Pipeline:
         frame[new_frame != 0] = 255
 
         return frame
+
+    @staticmethod
+    def extract_white_lane(frame):
+        """
+
+        """
+        new_frame = np.zeros_like(frame)
+
+        # convert image to grayscale
+        frame_hls = cv.cvtColor(frame, cv.COLOR_RGB2HLS)
+
+        # filter out the yellow parts of the image
+        frame_white = cv.inRange(frame_hls, (0, 200, 0), (255, 255, 255))
+        new_frame[frame_white == 0] = 0
+        new_frame[frame_white != 0] = 255
+
+        return new_frame
 
     @staticmethod
     def canny_edge_detection(frame):
@@ -96,8 +115,9 @@ class Pipeline:
         return cv.Canny(frame, minVal, maxVal, edges=True)
 
     @staticmethod
-    def hough_lines(frame):
+    def gaussian_blur(frame):
         """
 
         """
-        pass
+
+        return cv.GaussianBlur(frame, (3, 3), sigmaX=0, sigmaY=0)

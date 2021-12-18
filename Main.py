@@ -38,7 +38,7 @@ def main():
     cap.set(cv.CAP_PROP_FPS, 240)
     # start video playback at critical point, where street changes color
     # START_POINT = 0 # Start
-    START_POINT = 500 # first critical part
+    START_POINT = 500  # first critical part
     cap.set(cv.CAP_PROP_POS_FRAMES, START_POINT)
 
     # Check if camera opened successfully
@@ -62,14 +62,18 @@ def main():
                 for x, y in config.sources_points:
                     cv.circle(frame, (x, y), 2, (0, 0, 255), -1)
 
-            cv.imshow('Normal video', roi.draw_roi(frame))
+            # cv.imshow('Normal video', roi.draw_roi(frame))
 
             # transform frame here
             # -----------------------------------------
 
+            # blurring
+            modified_frame = Pipeline.gaussian_blur(frame)
+
             # crop a ROI from the image
-            modified_frame = roi.apply_roi(frame)
-            # maybe also crop video
+            modified_frame = roi.apply_roi(modified_frame)
+            # cv.imshow("ROI", modified_frame)
+            # todo: maybe also crop video
 
             # apply the camera calibration
             if config.ACTIVATE_CAMERA_CALIBRATION:
@@ -77,37 +81,34 @@ def main():
 
             # segment yellow lane
             yellow_lane = Pipeline.extract_yellow_lane(modified_frame)
-            cv.imshow("Yellow lane", yellow_lane)
+            yellow_lane = cv.cvtColor(yellow_lane, cv.COLOR_RGB2GRAY)
+            # cv.imshow("Yellow lane", yellow_lane)
 
             # segment white lane
             white_lane = Pipeline.extract_white_lane(modified_frame)
+            white_lane = cv.cvtColor(white_lane, cv.COLOR_RGB2GRAY)
             cv.imshow("White Lane", white_lane)
 
             # make canny edge detection and apply the roi to it
             canny = Pipeline.canny_edge_detection(frame)
             canny = roi.apply_roi(canny)
-            cv.imshow("Canny", canny)
+            # cv.imshow("Canny", canny)
 
             # combine white and yellow lane
-            gray_yellow = cv.cvtColor(yellow_lane, cv.COLOR_RGB2GRAY)
-            modified_frame = cv.bitwise_or(gray_yellow, white_lane)
+            modified_frame = cv.bitwise_or(yellow_lane, white_lane)
 
             # combine canny and white/yellow
             modified_frame = cv.bitwise_or(canny, modified_frame)
 
             # curve transformation
-            #curved_white = CurveFitter.fit_curve_polyfit(white_lane)
-            x1,y1 = CurveFitter.fit_curve_polyfit(gray_yellow)
-            x2,y2 = CurveFitter.fit_curve_polyfit(white_lane)
-            
-            frame[x1,y1] = 255
-            frame[x2,y2] = 255
-            #frame_curves = cv.bitwise_or(curved_white,curved_yellow)
+            x1, y1 = CurveFitter.fit_curve_polyfit(yellow_lane)
+            x2, y2 = CurveFitter.fit_curve_polyfit(white_lane)
 
-            cv.imshow("curved",frame)
+            frame[x1, y1] = 255
+            frame[x2, y2] = 255
 
+            cv.imshow("curved", frame)
 
-            
             # ---------- Transform the %resulting images perspective ----------- #
 
             cv.imshow('Lane Detection', modified_frame)
@@ -115,7 +116,7 @@ def main():
             # apply the perspective transform
             frame = perspective_transform.transform(frame)
 
-            cv.imshow('perspective transform', frame)
+            # cv.imshow('perspective transform', frame)
 
             # -----------------------------------------
             # don´t touch the code below
