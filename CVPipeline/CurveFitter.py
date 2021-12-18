@@ -29,12 +29,6 @@ class CurveFitter:
         
         new_frame = frame.copy()
         
-      #  n_empty1 = np.zeros(shape=new_frame.shape)
-      #  n_empty2= np.zeros(shape=new_frame.shape)
-      #  n_empty1[x1,y1] = 255
-      #  n_empty2[x2,y2] = 255
-      #  A = np.column_stack([x1,y1])
-      #  B = np.column_stack([x2,y2])
         A = np.stack((y1,x1),axis=-1)
         B = np.stack((y2,x2),axis=-1)
         C= np.concatenate((A,B))
