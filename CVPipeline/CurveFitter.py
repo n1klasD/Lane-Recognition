@@ -19,7 +19,7 @@ class CurveFitter:
 
         ar = np.poly1d(np.polyfit(y, x, 2))
         y = np.int32(ar(xn))
-        mask = (y >= 0) & (y >= 450) & (y < 720)
+        mask = (y >= 0) & (y >= 450) & (y < 674)
         # [( int(y[i]),x) for i,x in enumerate(xn) if y[i] >=0 and y[i] <= 720]
         return y[mask], xn[mask]
 
@@ -34,4 +34,4 @@ class CurveFitter:
         empty_img = np.zeros_like(frame)
         cv.fillPoly(empty_img, [C.astype(np.int32)], (0, 255, 0))
 
-        return cv.addWeighted(new_frame, 1, empty_img, 0.5, 0.0)
+        return cv.addWeighted(new_frame, 1, empty_img, 0.3, 0.0)
