@@ -87,24 +87,24 @@ def main():
             white_lane = Pipeline.extract_white_lane(modified_frame)
             # cv.imshow("White Lane", white_lane)
 
-            # make canny edge detection and apply the roi to it
-            canny = Pipeline.canny_edge_detection(frame)
-            canny = roi.apply_roi(canny)
-            # cv.imshow("Canny", canny)
-
             # combine white and yellow lane
             white_yellow = cv.bitwise_or(yellow_lane, white_lane)
             white_yellow = cv.cvtColor(white_yellow, cv.COLOR_RGB2GRAY)
             cv.imshow("white_yellow", white_yellow)
 
             # combine canny and white/yellow
-            modified_frame = cv.bitwise_or(canny, white_yellow)
+            # modified_frame = cv.bitwise_or(canny, white_yellow)
+
+            # make canny edge detection and apply the roi to it
+            canny = Pipeline.canny_edge_detection(white_yellow)
+            # canny = roi.apply_roi(canny)
+            cv.imshow("Canny", canny)
 
             # print(modified_frame.shape)
 
             # curve transformation
-            left, right = Pipeline.split_left_right(white_yellow)
-            cv.imshow("left", left)
+            right, left = Pipeline.split_left_right(canny)
+            # cv.imshow("left", left)
             cv.imshow("right", right)
             x1, y1 = CurveFitter.fit_curve_polyfit(left)
             x2, y2 = CurveFitter.fit_curve_polyfit(right)
