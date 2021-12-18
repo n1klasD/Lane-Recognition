@@ -5,19 +5,19 @@ from time import time_ns
 class Measurement:
 
     def __init__(self, target_time=None):
-        self.start = 0
         self.last_measurement = 0
         self.fps_history = []
         self.target_time = target_time
+        self.frame_timing = self.measure('Frame')
 
-    def begin(self):
-        self.start = time_ns()
+    def beginFrame(self):
+        self.frame_timing.reset()
 
-    def end(self):
-        self.last_measurement = time_ns() - self.start
+    def endFrame(self):
+        self.frame_timing.finish()
 
-    def drawToImage(self, img):
-        milliseconds = self.last_measurement / (10 ** 6)
+    def drawFrameTiming(self, img):
+        milliseconds = self.frame_timing.toMs()
         fps = 1000 / milliseconds
 
         if len(self.fps_history) >= 5:
@@ -39,7 +39,7 @@ class Measurement:
         self.drawText(img, fps_str, 1)
 
     def drawText(self, img, text, row, color=(0, 255, 200)):
-        font=cv.FONT_HERSHEY_SIMPLEX
+        font = cv.FONT_HERSHEY_SIMPLEX
 
         text_size, _ = cv.getTextSize(text, font, 1, 1)
         text_x = img.shape[1] - text_size[0] - 20
@@ -57,3 +57,41 @@ class Measurement:
         )
 
         cv.circle(img, pos, radius, color, -1)
+
+    def drawTiming(self, img, timing, row):
+        if not timing.finished:
+            raise Error('Attempted to draw active timing')
+
+        font=cv.FONT_HERSHEY_SIMPLEX
+
+        text = timing.getMsString()
+        text_size, _ = cv.getTextSize(text, font, 1, 1)
+        text_x = img.shape[1] - text_size[0] - 20
+        text_y = img.shape[0] - 20 - text_size[1] * (row + 1) - 10 * row
+        color = (0, 0, 255)
+
+        pos = (text_x, text_y)
+        cv.putText(img, text, pos, font, 1, color, 2)
+
+    def measure(self, name):
+        return Timing(name)
+
+class Timing:
+
+    def __init__(self, name):
+        self.start = time_ns()
+        self.name = name
+
+    def reset(self):
+        self.start = time_ns()
+        self.finished = False
+
+    def finish(self):
+        self.end = time_ns()
+        self.finished = True
+
+    def toMs(self):
+        return (self.end - self.start) / (10 ** 6)
+
+    def getMsString(self):
+        return '{}: {:.3f} ms'.format(self.name, self.toMs())

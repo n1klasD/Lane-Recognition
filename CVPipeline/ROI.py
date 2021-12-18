@@ -36,7 +36,7 @@ class ROI:
         mask_gray = cv.fillConvexPoly(outer_mask_gray, self.inner_points_np, 0)
         self.mask_gray = mask_gray
 
-    def apply_roi(self, img):
+    def apply_roi(self, img, do_crop=True):
         masked = None
 
         if len(img.shape) == 2:
@@ -44,16 +44,15 @@ class ROI:
         else:
             masked = cv.bitwise_and(self.mask_color, img)
 
-        # TODO Crop the masked image. Currently this causes
-        #      issues with the perspective transformation
-        return masked
+        return self.crop_to_content(masked) if do_crop else masked
+
 
     def crop_to_content(self, img):
-        from_x = self.points_np[3][0]
-        to_x = self.points_np[2][0]
+        from_x = self.outer_points_np[0][0]
+        to_x = self.outer_points_np[1][0]
 
-        from_y = self.points_np[0][1]
-        to_y = self.points_np[3][1]
+        from_y = self.outer_points_np[2][1]
+        to_y = self.outer_points_np[0][1]
 
         return img[from_y:to_y, from_x:to_x]
 
