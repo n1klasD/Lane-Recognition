@@ -81,13 +81,11 @@ def main():
 
             # segment yellow lane
             yellow_lane = Pipeline.extract_yellow_lane(modified_frame)
-            yellow_lane = cv.cvtColor(yellow_lane, cv.COLOR_RGB2GRAY)
             # cv.imshow("Yellow lane", yellow_lane)
 
             # segment white lane
             white_lane = Pipeline.extract_white_lane(modified_frame)
-            white_lane = cv.cvtColor(white_lane, cv.COLOR_RGB2GRAY)
-            cv.imshow("White Lane", white_lane)
+            # cv.imshow("White Lane", white_lane)
 
             # make canny edge detection and apply the roi to it
             canny = Pipeline.canny_edge_detection(frame)
@@ -95,14 +93,21 @@ def main():
             # cv.imshow("Canny", canny)
 
             # combine white and yellow lane
-            modified_frame = cv.bitwise_or(yellow_lane, white_lane)
+            white_yellow = cv.bitwise_or(yellow_lane, white_lane)
+            white_yellow = cv.cvtColor(white_yellow, cv.COLOR_RGB2GRAY)
+            cv.imshow("white_yellow", white_yellow)
 
             # combine canny and white/yellow
-            modified_frame = cv.bitwise_or(canny, modified_frame)
+            modified_frame = cv.bitwise_or(canny, white_yellow)
+
+            # print(modified_frame.shape)
 
             # curve transformation
-            x1, y1 = CurveFitter.fit_curve_polyfit(yellow_lane)
-            x2, y2 = CurveFitter.fit_curve_polyfit(white_lane)
+            left, right = Pipeline.split_left_right(white_yellow)
+            cv.imshow("left", left)
+            cv.imshow("right", right)
+            x1, y1 = CurveFitter.fit_curve_polyfit(left)
+            x2, y2 = CurveFitter.fit_curve_polyfit(right)
 
             frame[x1, y1] = 255
             frame[x2, y2] = 255

@@ -120,4 +120,17 @@ class Pipeline:
 
         """
 
-        return cv.GaussianBlur(frame, (3, 3), sigmaX=0, sigmaY=0)
+        return cv.GaussianBlur(frame, (5, 5), sigmaX=0, sigmaY=0)
+
+    @staticmethod
+    def split_left_right(frame):
+        half_width = frame.shape[1] // 2
+        width = frame.shape[1]
+
+        frame_left = frame.copy()
+        frame_right = frame.copy()
+
+        frame_left[:, half_width:width] = 0
+        frame_right[:, 0:half_width] = 0
+
+        return frame_right, frame_left
