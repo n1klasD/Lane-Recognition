@@ -14,11 +14,17 @@ class ROI:
 
         self.points_np = np.array(self.points, dtype=np.int32)
 
-        self.mask = np.zeros((self.height, self.width, 3), dtype=np.uint8)
-        self.mask = cv.fillConvexPoly(self.mask, self.points_np, (255, 255, 255))
+        self.mask_color = np.zeros((self.height, self.width, 3), dtype=np.uint8)
+        self.mask_color = cv.fillConvexPoly(self.mask_color, self.points_np, (255, 255, 255))
+        self.mask_gray = np.zeros((self.height, self.width), dtype=np.uint8)
+        self.mask_gray = cv.fillConvexPoly(self.mask_gray, self.points_np, 255)
 
     def apply_roi(self, img):
-        return cv.bitwise_and(self.mask, img)
+        if img.shape == (720, 1280):
+            return cv.bitwise_and(self.mask_gray, img)
+        else:
+            return cv.bitwise_and(self.mask_color, img)
+
 
     def draw_roi(self, img):
         img = img.copy()

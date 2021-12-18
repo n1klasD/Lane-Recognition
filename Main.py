@@ -54,7 +54,6 @@ def main():
         # Capture frame-by-frame
         ret, frame = cap.read()
         if ret:
-
             # debugging, show points of perspective transformation
             if config.PERSPECTIVE_DEBUG:
                 for x, y in config.sources_points:
@@ -81,7 +80,9 @@ def main():
             white_lane = Pipeline.extract_white_lane(modified_frame)
             # cv.imshow("White Lane", white_lane)
 
+            # make canny edge detection and apply the roi to it
             canny = Pipeline.canny_edge_detection(frame)
+            canny = roi.apply_roi(canny)
             cv.imshow("Canny", canny)
 
             # combine white and yellow lane
