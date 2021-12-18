@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 
 H_LOWER_Y = 10
 S_LOWER_Y = 80
-V_LOWER_Y = 150 # 100
+V_LOWER_Y = 150  # 100
 
 H_UPPER_Y = 30
 S_UPPER_Y = 255
@@ -26,6 +26,7 @@ beta = -300
 # Lookup table for improving contrasts
 c = np.arange(0, 256)
 lookup_table_contrast = np.clip(alpha * c + beta, 0, 255).astype(np.uint8)
+
 
 # plotting the gradation curve
 # x = np.linspace(0, 255, 256)
@@ -83,11 +84,18 @@ class Pipeline:
         """
 
         """
-        minVal = 150
-        maxVal = 200
-        equation = True # True should be better
+        improvement = False
 
-        return cv.Canny(frame, minVal, maxVal, edges=equation)
+        if improvement:
+            v = np.median(frame)
+            sigma = 0.33
+            minVal = int(max(0, (1.0 - sigma) * v))
+            maxVal = int(min(255, (1.0 + sigma) * v))
+        else:
+            minVal = 100
+            maxVal = 200
+
+        return cv.Canny(frame, minVal, maxVal, edges=True)
 
     @staticmethod
     def hough_lines(frame):
