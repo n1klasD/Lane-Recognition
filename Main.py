@@ -30,8 +30,8 @@ def main():
     # configure camera
     cap.set(cv.CAP_PROP_FPS, 240)
     # start video playback at critical point, where street changes color
-    START_POINT = 0 # Start
-    # START_POINT = 500 # first critical part
+    # START_POINT = 0 # Start
+    START_POINT = 500 # first critical part
     cap.set(cv.CAP_PROP_POS_FRAMES, START_POINT)
 
     # Check if camera opened successfully

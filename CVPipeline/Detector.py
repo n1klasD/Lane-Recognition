@@ -83,7 +83,7 @@ class Pipeline:
         """
 
         """
-        minVal = 100
+        minVal = 150
         maxVal = 200
         sobelKernelSize = 3
         equation = False # True should be better
