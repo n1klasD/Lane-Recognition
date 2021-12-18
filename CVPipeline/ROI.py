@@ -37,10 +37,25 @@ class ROI:
         self.mask_gray = mask_gray
 
     def apply_roi(self, img):
+        masked
+
         if len(img.shape) == 2:
-            return cv.bitwise_and(self.mask_gray, img)
+            masked = cv.bitwise_and(self.mask_gray, img)
         else:
-            return cv.bitwise_and(self.mask_color, img)
+            masked = cv.bitwise_and(self.mask_color, img)
+
+        # TODO Crop the masked image. Currently this causes
+        #      issues with the perspective transformation
+        return masked
+
+    def crop_to_content(self, img):
+        from_x = self.points_np[3][0]
+        to_x = self.points_np[2][0]
+
+        from_y = self.points_np[0][1]
+        to_y = self.points_np[3][1]
+
+        return img[from_y:to_y, from_x:to_x]
 
     def draw_roi(self, img):
         img = img.copy()
