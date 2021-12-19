@@ -53,9 +53,9 @@ class CurveFitter:
             # retransform the points onto the original image
             points = CurveFitter.stack_points(y1, x1, y2, x2)
             inv_points = perspective_transform.inverse_transform(points)
-            return CurveFitter.draw_area(final_frame, inv_points)
+            return CurveFitter.draw_area(final_frame, inv_points), x1, y1, (a1, b1, c1), x2, y2, (a2, b2, c2)
         else:
-            return final_frame
+            return final_frame, x1, y1, (a1, b1, c1), x2, y2, (a2, b2, c2)
 
 
     @staticmethod
@@ -93,3 +93,22 @@ class CurveFitter:
         cv.fillPoly(empty_img, [points.astype(np.int32)], (0, 255, 0))
 
         return cv.addWeighted(frame, 1, empty_img, 0.3, 0.0)
+
+    @staticmethod
+    def calculate_curvature(fitx, fity, params):
+        dep = fitx
+        dep_on = fity
+
+        m_per_px_x = 3.7 / 700
+        m_per_px_y = 30 / 720
+
+        w2, w1, w0 = np.polyfit(dep_on * m_per_px_y, dep * m_per_px_x, 2)
+
+        second_derivative = 2 * w2
+        first_derivative = lambda x: second_derivative * x + w1
+
+        for_x = np.max(dep_on)
+        numerator = (1 + first_derivative(for_x) ** 2) ** 1.5
+        denominator = abs(second_derivative)
+
+        return numerator / denominator / 10
