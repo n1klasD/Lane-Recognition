@@ -87,6 +87,8 @@ def main():
             white_yellow = cv.cvtColor(white_yellow, cv.COLOR_RGB2GRAY)
             # cv.imshow("white_yellow", white_yellow)
 
+            needs_update, diff_value = optimizer.needs_update(white_yellow)
+
             # make canny edge detection and apply the roi to it
             canny = Pipeline.canny_edge_detection(white_yellow)
             cv.imshow("Canny", canny)
@@ -116,6 +118,13 @@ def main():
             final_frame = frame.copy()
 
             measurement.drawFrameTiming(final_frame)
+            measurement.drawText(final_frame, 'Diff: {:.3f}'.format(diff_value), 2)
+            measurement.drawText(final_frame, 'Threshold: {:.3f}'.format(optimizer.threshold), 3)
+            measurement.drawText(final_frame, 'Max Cached: {}'.format(optimizer.max_cached_frames), 4)
+
+            if needs_update:
+                measurement.drawText(final_frame, 'Update', 5)
+
             measurement.drawTiming(final_frame, yellow_timing, 2)
             measurement.drawTiming(final_frame, white_timing, 1)
             measurement.drawTiming(final_frame, curve_timing, 0)
@@ -140,6 +149,11 @@ def main():
             # show one frame at a time(s) in debug mode(toggle with d)
             if key == ord('d'):
                 debug = not debug
+
+            if key == ord('u'):
+                optimizer.threshold -= 0.1
+            elif key == ord('i'):
+                optimizer.threshold += 0.1
         # Break the loop
         else:
             break
