@@ -6,6 +6,8 @@ import cv2 as cv
 
 from CVPipeline import Pipeline
 
+import config
+
 
 class CurveFitter:
     def __init__(self):
@@ -16,7 +18,7 @@ class CurveFitter:
 
     def calculateOverlay(self, frame, perspective_transform, final_frame):
         """
-        calculate overlay for frame
+        Calculate overlay for frame. Also adaptively check the b values of the curve fit for a threshold
         """
 
         right, left = Pipeline.split_left_right(frame)
@@ -24,19 +26,13 @@ class CurveFitter:
             y1, x1, a1, b1, c1 = CurveFitter.fit_curve_polyfit(right)
             y2, x2, a2, b2, c2 = CurveFitter.fit_curve_polyfit(left)
 
-            print("left", self.left_lifetime)
-            print("right", self.right_lifetime)
-            print("------")
-            l = 20
-
             self.left_lifetime += 1
             self.right_lifetime += 1
 
             if self.left_lane_buffer:
                 left_newest_curve = self.left_lane_buffer[-1]
                 _, _, old_a, old_b, old_c = left_newest_curve
-                k = 0.5
-                if (old_b - k < b1 < old_b + k) or (self.left_lifetime > l):
+                if (old_b - config.TOLERANCE < b1 < old_b + config.TOLERANCE) or (self.left_lifetime > config.FRAME_LIFETIME):
                     self.left_lifetime = 0
                     self.left_lane_buffer.append((y1, x1, a1, b1, c1))
             else:
@@ -45,8 +41,7 @@ class CurveFitter:
             if self.right_lane_buffer:
                 right_newest_curve = self.right_lane_buffer[-1]
                 _, _, old_a, old_b, old_c = right_newest_curve
-                k = 0.5
-                if old_b - k < b2 < old_b + k or (self.right_lifetime > l):
+                if old_b - config.TOLERANCE < b2 < old_b + config.TOLERANCE or (self.right_lifetime > config.FRAME_LIFETIME):
                     self.right_lifetime = 0
                     self.right_lane_buffer.append((y2, x2, a2, b2, c2))
             else:
@@ -55,6 +50,7 @@ class CurveFitter:
             y1, x1, _, _, _ = self.left_lane_buffer[-1]
             y2, x2, _, _, _ = self.right_lane_buffer[-1]
 
+            # retransform the points onto the original image
             points = CurveFitter.stack_points(y1, x1, y2, x2)
             inv_points = perspective_transform.inverse_transform(points)
             return CurveFitter.draw_area(final_frame, inv_points)

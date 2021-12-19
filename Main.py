@@ -29,6 +29,7 @@ def main():
         perspective_transform.set_source_points(undistorted_points)
     else:
         perspective_transform.set_source_points(config.sources_points)
+
     # open video
     cap = cv.VideoCapture('resources/Udacity/project_video.mp4')
     # configure camera
@@ -54,7 +55,7 @@ def main():
         # Capture frame-by-frame
         ret, frame = cap.read()
         if ret:
-            final_frame = frame.copy()
+
             # debugging, show points of perspective transformation
             if config.PERSPECTIVE_DEBUG:
                 for x, y in config.sources_points:
@@ -62,14 +63,18 @@ def main():
             # transform frame here
             # -----------------------------------------
 
-            # blurring
-            modified_frame = Pipeline.gaussian_blur(frame)
-            # crop a ROI from the image
-            modified_frame = roi.apply_roi(modified_frame, do_crop=False)
-
             # apply the camera calibration
             if config.ACTIVATE_CAMERA_CALIBRATION:
-                modified_frame = camera_calibration.undistort(modified_frame, fix_roi=False)
+                modified_frame = camera_calibration.undistort(frame, fix_roi=False)
+                final_frame = modified_frame.copy()
+            else:
+                modified_frame = frame
+
+            # blurring
+            modified_frame = Pipeline.gaussian_blur(modified_frame)
+            
+            # crop a ROI from the image
+            modified_frame = roi.apply_roi(modified_frame, do_crop=False)
 
             # apply the perspective transform
             modified_frame = perspective_transform.transform(modified_frame)

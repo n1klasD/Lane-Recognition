@@ -19,7 +19,7 @@ destination_points = [[300, 720], [980, 720], [980, 0], [300, 0]]
 # Camera Calibration
 
 # Start debug mode
-ACTIVATE_CAMERA_CALIBRATION = False
+ACTIVATE_CAMERA_CALIBRATION = True
 CALIBRATION_DEBUG = False
 # Path to camera calibration images (folder, that must contain jpg images)
 calibration_images_path = 'resources/Udacity/calib'
@@ -27,3 +27,7 @@ calibration_images_path = 'resources/Udacity/calib'
 # ROI Points
 outer_roi_points = [[110, 665], [1230, 665], [780, 440], [545, 440]]
 inner_roi_points = [[670, 470], [440, 665], [930, 665]]
+
+# Parameters for curve fitting optimization
+FRAME_LIFETIME = 20
+TOLERANCE = 0.5
