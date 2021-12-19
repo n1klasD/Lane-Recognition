@@ -17,7 +17,7 @@ V_UPPER_Y = 255
 
 # Constants for filtering out white lines
 # Thresholding
-THRESH_LOWER = 190  # -> 180 optimal
+THRESH_LOWER = 180  # -> 180 optimal
 THRESH_UPPER = 255
 
 # Point operation for improving contrast
@@ -74,7 +74,7 @@ class Pipeline:
         return new_frame
 
     @staticmethod
-    def extract_white_lane2(frame):
+    def extract_white_lane(frame):
         """
 
         """
@@ -92,10 +92,13 @@ class Pipeline:
         frame[new_frame == 0] = 0
         frame[new_frame != 0] = 255
 
-        return frame
+        frame = cv.erode(frame, kernel=kernel, iterations=1)
+        frame = cv.dilate(frame, kernel=kernel, iterations=1)
+
+        return cv.cvtColor(frame, cv.COLOR_GRAY2BGR)
 
     @staticmethod
-    def extract_white_lane(frame):
+    def extract_white_lane2(frame):
         """
 
         """
@@ -116,16 +119,9 @@ class Pipeline:
         """
 
         """
-        improvement = False
 
-        if improvement:
-            v = np.median(frame)
-            sigma = 0.33
-            minVal = int(max(0, (1.0 - sigma) * v))
-            maxVal = int(min(255, (1.0 + sigma) * v))
-        else:
-            minVal = 150
-            maxVal = 200
+        minVal = 150
+        maxVal = 200
 
         return cv.Canny(frame, minVal, maxVal, edges=True)
 
@@ -135,7 +131,7 @@ class Pipeline:
 
         """
 
-        return cv.GaussianBlur(frame, (3, 3), sigmaX=0, sigmaY=0)
+        return cv.GaussianBlur(frame, (5, 5), sigmaX=0, sigmaY=0)
 
     @staticmethod
     def split_left_right(frame):
