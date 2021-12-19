@@ -25,6 +25,7 @@ class PerspectiveTransform:
         self.inverse_matrix = cv.getPerspectiveTransform(self.dest_points, self.source_points)
 
     def inverse_transform(self, points) -> np.ndarray:
+        points = np.array([points], dtype=np.float32)
         return cv.perspectiveTransform(points, self.inverse_matrix)
 
     def transform_points(self, points) -> np.ndarray:

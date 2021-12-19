@@ -53,13 +53,14 @@ def main():
         # Capture frame-by-frame
         ret, frame = cap.read()
         if ret:
+            final_frame = frame.copy()
             # debugging, show points of perspective transformation
             if config.PERSPECTIVE_DEBUG:
                 for x, y in config.sources_points:
                     cv.circle(frame, (x, y), 2, (0, 0, 255), -1)
-            # cv.imshow('Normal video', roi.draw_roi(frame))
             # transform frame here
             # -----------------------------------------
+
             # blurring
             modified_frame = Pipeline.gaussian_blur(frame)
             # crop a ROI from the image
@@ -72,34 +73,29 @@ def main():
             # apply the perspective transform
             modified_frame = perspective_transform.transform(modified_frame)
 
+            lane_extraction_timing = measurement.measure("Lane Extraction")
             white_yellow = Pipeline.extract_lanes(modified_frame)
-            # canny = Pipeline.canny_edge_detection(white_yellow)
-            # canny = CurveFitter.hough_lines(canny, white_yellow)
-            # cv.imshow("white_yellow", canny)
+            lane_extraction_timing.finish()
 
             needs_update, diff_value = optimizer.needs_update(white_yellow)
-            curve_timing = measurement.measure('Curve Fitting')
 
             # curve transformation
+            curve_timing = measurement.measure('Curve Fitting')
             left, right = Pipeline.split_left_right(white_yellow)
             y1, x1 = CurveFitter.fit_curve_polyfit(right)
             y2, x2 = CurveFitter.fit_curve_polyfit(left)
-
-            CurveFitter.stack_points(y1, x1, y2, x2)
-
-            area = CurveFitter.draw_area(modified_frame, y1, x1, y2, x2)
-            white_yellow[y1, x1] = 0
-            white_yellow[y2, x2] = 255
             curve_timing.finish()
-            cv.imshow("feef", area)
 
-            # cv.imshow("curved", frame)
+            # Inverse transform points and draw poly on original image
+            inverse_timing = measurement.measure("Inverse Transformation")
+            points = CurveFitter.stack_points(y1, x1, y2, x2)
+            inv_points = perspective_transform.inverse_transform(points)
+            final_frame = CurveFitter.draw_area(final_frame, inv_points)
+            inverse_timing.finish()
+
             # ---------- Transform the %resulting images perspective ----------- #
-            # cv.imshow('Lane Detection', modified_frame)
-            cv.imshow("AHHHHH", white_yellow)
 
             measurement.endFrame()
-            final_frame = frame.copy()
 
             measurement.drawFrameTiming(final_frame)
             measurement.drawText(final_frame, 'Diff: {:.3f}'.format(diff_value), 2)
@@ -109,11 +105,11 @@ def main():
             if needs_update:
                 measurement.drawText(final_frame, 'Update', 5)
 
-            # measurement.drawTiming(final_frame, yellow_timing, 2)
-            # measurement.drawTiming(final_frame, white_timing, 1)
+            measurement.drawTiming(final_frame, lane_extraction_timing, 2)
+            measurement.drawTiming(final_frame, inverse_timing, 1)
             measurement.drawTiming(final_frame, curve_timing, 0)
 
-            cv.imshow('Final', final_frame)
+            cv.imshow('Lane Detection', final_frame)
 
             # cv.imshow('perspective transform', frame)
             # -----------------------------------------
