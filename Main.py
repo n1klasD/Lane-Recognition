@@ -26,13 +26,12 @@ def main():
         camera_calibration.calibrate(calibration_images)
         # apply calibration to the source points that are used for the perspective transformation
         undistorted_points = camera_calibration.undistortPoints(config.sources_points)
-        #
         perspective_transform.set_source_points(undistorted_points)
     else:
         perspective_transform.set_source_points(config.sources_points)
 
     # open video
-    cap = cv.VideoCapture('resources/Udacity/project_video.mp4')
+    cap = cv.VideoCapture(config.VIDEO_PATH)
     # configure camera
     # start video playback at critical point, where street changes color
     # START_POINT = 0 # Start

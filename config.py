@@ -1,6 +1,11 @@
 """
 Script for Configuration Variables
 """
+# IMPORTANT !!!
+# The videos should be in the folder /resources
+
+VIDEO_PATH = 'resources/Udacity/project_video.mp4'
+
 # Image properties
 VIDEO_HEIGHT = 720
 VIDEO_WIDTH = 1280
