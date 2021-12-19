@@ -32,7 +32,6 @@ class Measurement:
 
         if self.target_time is not None and milliseconds > self.target_time:
             self.drawText(img, time_str, 0, color=(0, 0, 255))
-            self.drawCircle(img, 0, (0, 0, 255))
         else:
             self.drawText(img, time_str, 0)
 
@@ -62,16 +61,18 @@ class Measurement:
         if not timing.finished:
             raise Error('Attempted to draw active timing')
 
-        font=cv.FONT_HERSHEY_SIMPLEX
+        font = cv.FONT_HERSHEY_SIMPLEX
+        font_size = 1
+        font_stroke = 2
 
         text = timing.getMsString()
-        text_size, _ = cv.getTextSize(text, font, 1, 1)
-        text_x = img.shape[1] - text_size[0] - 20
-        text_y = img.shape[0] - 20 - text_size[1] * (row + 1) - 10 * row
-        color = (0, 0, 255)
+        text_size, _ = cv.getTextSize(text, font, font_size, font_stroke)
+        text_x = 20
+        text_y = 20 + text_size[1] * (row + 1) + 10 * row
+        color = (0, 255, 0)
 
         pos = (text_x, text_y)
-        cv.putText(img, text, pos, font, 1, color, 2)
+        cv.putText(img, text, pos, font, font_size, color, font_stroke)
 
     def measure(self, name):
         return Timing(name)
