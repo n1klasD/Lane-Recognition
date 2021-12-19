@@ -5,7 +5,6 @@ import numpy as np
 import cv2 as cv
 
 from CVPipeline import Pipeline
-
 import config
 
 
@@ -32,7 +31,8 @@ class CurveFitter:
             if self.left_lane_buffer:
                 left_newest_curve = self.left_lane_buffer[-1]
                 _, _, old_a, old_b, old_c = left_newest_curve
-                if (old_b - config.TOLERANCE < b1 < old_b + config.TOLERANCE) or (self.left_lifetime > config.FRAME_LIFETIME):
+                if (old_b - config.TOLERANCE < b1 < old_b + config.TOLERANCE) or (
+                        self.left_lifetime > config.FRAME_LIFETIME):
                     self.left_lifetime = 0
                     self.left_lane_buffer.append((y1, x1, a1, b1, c1))
             else:
@@ -41,7 +41,8 @@ class CurveFitter:
             if self.right_lane_buffer:
                 right_newest_curve = self.right_lane_buffer[-1]
                 _, _, old_a, old_b, old_c = right_newest_curve
-                if old_b - config.TOLERANCE < b2 < old_b + config.TOLERANCE or (self.right_lifetime > config.FRAME_LIFETIME):
+                if old_b - config.TOLERANCE < b2 < old_b + config.TOLERANCE or (
+                        self.right_lifetime > config.FRAME_LIFETIME):
                     self.right_lifetime = 0
                     self.right_lane_buffer.append((y2, x2, a2, b2, c2))
             else:
@@ -55,8 +56,7 @@ class CurveFitter:
             inv_points = perspective_transform.inverse_transform(points)
             return CurveFitter.draw_area(final_frame, inv_points), x1, y1, (a1, b1, c1), x2, y2, (a2, b2, c2)
         else:
-            return final_frame, x1, y1, (a1, b1, c1), x2, y2, (a2, b2, c2)
-
+            return final_frame, None, None, (None, None, None), None, None, (None, None, None)
 
     @staticmethod
     def fit_curve_polyfit(frame):
@@ -96,6 +96,9 @@ class CurveFitter:
 
     @staticmethod
     def calculate_curvature(fitx, fity, params):
+        if fitx is None:
+            return 0
+
         dep = fitx
         dep_on = fity
 
