@@ -13,7 +13,7 @@ DEBUG = True
 # Start debug mode
 PERSPECTIVE_DEBUG = False
 # corresponding source and destination points for the perspective transformation (must be 4)
-sources_points = [[279, 688], [1026, 688], [684, 450], [596, 450]]
+sources_points = [[278, 688], [1026, 688], [684, 448], [598, 448]]
 destination_points = [[300, 720], [980, 720], [980, 0], [300, 0]]
 
 # Camera Calibration
