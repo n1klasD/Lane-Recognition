@@ -7,6 +7,7 @@ from CVPipeline import PerspectiveTransform
 from CVPipeline import Calibration
 from CVPipeline import ROI
 from CVPipeline import Pipeline
+import numpy as np
 
 
 def main():
@@ -48,6 +49,9 @@ def main():
     # Read until video is completed
     curve_fitter = CurveFitter()
 
+    buf_entries = 10
+    curv_buffer = []
+
     while cap.isOpened():
         measurement.beginFrame()
 
@@ -86,9 +90,22 @@ def main():
             #left, right = Pipeline.split_left_right(white_yellow)
             #y1, x1, _, _, _ = CurveFitter.fit_curve_polyfit(right)
             #y2, x2, _, _, _ = CurveFitter.fit_curve_polyfit(left)
+            final_frame, x1, y1, right_params, x2, y2, left_params = curve_fitter.calculateOverlay(white_yellow, perspective_transform, final_frame)
             curve_timing.finish()
 
-            final_frame = curve_fitter.calculateOverlay(white_yellow, perspective_transform, final_frame)
+            curvature_timing = measurement.measure('calculate_curvature')
+            curvature_right = CurveFitter.calculate_curvature(x1, y1, right_params)
+            curvature_left = CurveFitter.calculate_curvature(x2, y2, left_params)
+            combined_curvature = (curvature_left + curvature_right) / 2
+            curvature_timing.finish()
+
+            if len(curv_buffer) >= buf_entries:
+                curv_buffer = np.roll(curv_buffer, 1)
+                curv_buffer[0] = combined_curvature
+            else:
+                curv_buffer.append(combined_curvature)
+
+            final_curvature = np.average(curv_buffer)
 
             # Inverse transform points and draw poly on original image
             inverse_timing = measurement.measure("Inverse Transformation")
@@ -106,12 +123,15 @@ def main():
             measurement.drawText(final_frame, 'Threshold: {:.3f}'.format(optimizer.threshold), 3)
             measurement.drawText(final_frame, 'Max Cached: {}'.format(optimizer.max_cached_frames), 4)
 
+            measurement.drawText(final_frame, 'Curvature: {:.3f}'.format(final_curvature), 7)
+
             if needs_update:
                 measurement.drawText(final_frame, 'Update', 5)
 
             measurement.drawTiming(final_frame, lane_extraction_timing, 2)
-            measurement.drawTiming(final_frame, inverse_timing, 1)
-            measurement.drawTiming(final_frame, curve_timing, 0)
+            measurement.drawTiming(final_frame, inverse_timing, 3)
+            measurement.drawTiming(final_frame, curve_timing, 4)
+            measurement.drawTiming(final_frame, curvature_timing, 5)
 
             cv.imshow('Lane Detection', final_frame)
 
