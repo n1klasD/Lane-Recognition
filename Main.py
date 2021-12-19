@@ -46,6 +46,7 @@ def main():
     roi = ROI()
     # main loop
     # Read until video is completed
+    curve_fitter = CurveFitter()
 
     while cap.isOpened():
         measurement.beginFrame()
@@ -76,21 +77,24 @@ def main():
             lane_extraction_timing = measurement.measure("Lane Extraction")
             white_yellow = Pipeline.extract_lanes(modified_frame)
             lane_extraction_timing.finish()
+            cv.imshow("fefe", white_yellow)
 
             needs_update, diff_value = optimizer.needs_update(white_yellow)
 
-            # curve transformation
+            # curve fitting
             curve_timing = measurement.measure('Curve Fitting')
-            left, right = Pipeline.split_left_right(white_yellow)
-            y1, x1 = CurveFitter.fit_curve_polyfit(right)
-            y2, x2 = CurveFitter.fit_curve_polyfit(left)
+            #left, right = Pipeline.split_left_right(white_yellow)
+            #y1, x1, _, _, _ = CurveFitter.fit_curve_polyfit(right)
+            #y2, x2, _, _, _ = CurveFitter.fit_curve_polyfit(left)
             curve_timing.finish()
+
+            final_frame = curve_fitter.calculateOverlay(white_yellow, perspective_transform, final_frame)
 
             # Inverse transform points and draw poly on original image
             inverse_timing = measurement.measure("Inverse Transformation")
-            points = CurveFitter.stack_points(y1, x1, y2, x2)
-            inv_points = perspective_transform.inverse_transform(points)
-            final_frame = CurveFitter.draw_area(final_frame, inv_points)
+            #points = CurveFitter.stack_points(y1, x1, y2, x2)
+            #inv_points = perspective_transform.inverse_transform(points)
+            #final_frame = CurveFitter.draw_area(final_frame, inv_points)
             inverse_timing.finish()
 
             # ---------- Transform the %resulting images perspective ----------- #
