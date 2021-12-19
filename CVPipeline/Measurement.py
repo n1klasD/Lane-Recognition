@@ -58,8 +58,8 @@ class Measurement:
         cv.circle(img, pos, radius, color, -1)
 
     def drawTiming(self, img, timing, row):
-        if not timing.finished:
-            raise Error('Attempted to draw active timing')
+        if not hasattr(timing, 'finished') or not timing.finished:
+            raise ValueError('Attempted to draw active timing')
 
         font = cv.FONT_HERSHEY_SIMPLEX
         font_size = 1
