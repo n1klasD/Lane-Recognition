@@ -43,7 +43,6 @@ kernel = np.array([[0, 1, 0],
 
 iterations = 2
 
-
 # HLS
 H_LOWER_W = 0
 L_LOWER_W = 220
@@ -52,6 +51,12 @@ S_LOWER_W = 0  # 100
 H_UPPER_W = 255
 L_UPPER_W = 255
 S_UPPER_W = 255
+
+MIN_YELLOW = np.array([15, 75, 150], dtype="uint8")
+MAX_YELLOW = np.array([25, 255, 255], dtype="uint8")
+
+MIN_WHITE = np.array([0, 0, 220], dtype="uint8")
+MAX_WHITE = np.array([255, 100, 255], dtype="uint8")
 
 
 class Pipeline:
@@ -115,6 +120,30 @@ class Pipeline:
         return new_frame
 
     @staticmethod
+    def extract_lanes(frame):
+        frame_hsv = cv.cvtColor(frame.copy(), cv.COLOR_BGR2HSV)
+
+        # filter out the yellow parts of the image
+        frame_yellow = cv.inRange(frame_hsv, (H_LOWER_Y, S_LOWER_Y, V_LOWER_Y), (H_UPPER_Y, S_UPPER_Y, V_UPPER_Y))
+        frame_white = cv.inRange(frame_hsv, MIN_WHITE, MAX_WHITE)
+
+        combined = cv.bitwise_or(frame_white, frame_yellow)
+        _, frame = cv.threshold(combined, thresh=10, maxval=255, type=cv.THRESH_BINARY)
+        return frame
+
+    @staticmethod
+    def extract_lanes2(frame):
+        frame_hsv = cv.cvtColor(frame.copy(), cv.COLOR_BGR2HSV)
+
+        # filter out the yellow parts of the image
+        frame_yellow = cv.inRange(frame_hsv, MIN_YELLOW, MAX_YELLOW)
+        frame_white = cv.inRange(frame_hsv, MIN_WHITE, MAX_WHITE)
+
+        combined = cv.bitwise_or(frame_white, frame_yellow)
+        _, frame = cv.threshold(combined, thresh=10, maxval=255, type=cv.THRESH_BINARY)
+        return frame
+
+    @staticmethod
     def canny_edge_detection(frame):
         """
 
@@ -131,7 +160,7 @@ class Pipeline:
 
         """
 
-        return cv.GaussianBlur(frame, (5, 5), sigmaX=0, sigmaY=0)
+        return cv.GaussianBlur(frame, (3, 3), sigmaX=0, sigmaY=0)
 
     @staticmethod
     def split_left_right(frame):
