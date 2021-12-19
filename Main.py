@@ -16,8 +16,15 @@ def main():
     perspective_transform = PerspectiveTransform()
     camera_calibration = Calibration()
 
-    optimizer = CVPipeline.Optimizer(1.4, max_cached_frames=15)
+    optimizer = CVPipeline.Optimizer(0.8, max_cached_frames=15)
     measurement = CVPipeline.Measurement(target_time=50)
+
+    white_timing = measurement.measure('White Lane')
+    curve_timing = measurement.measure('Curve Fitting')
+    yellow_timing = measurement.measure('Yellow Lane')
+    canny_timing = measurement.measure('Canny')
+
+    x1 = y1 = x2 = y2 = 0
 
     # camera calibration
     # get calibration images
@@ -63,52 +70,66 @@ def main():
             # blurring
             modified_frame = Pipeline.gaussian_blur(frame)
             # crop a ROI from the image
-            modified_frame = roi.apply_roi(modified_frame, do_crop=False)
+            modified_frame = roi.apply_roi(modified_frame, do_crop=True)
             # cv.imshow("ROI", modified_frame)
             # todo: maybe also crop video
             # apply the camera calibration
             if config.ACTIVATE_CAMERA_CALIBRATION:
                 modified_frame = camera_calibration.undistort(modified_frame, fix_roi=False)
 
-            # segment yellow lane
-            yellow_timing = measurement.measure('Yellow')
-            yellow_lane = Pipeline.extract_yellow_lane(modified_frame)
-            yellow_timing.finish()
-            cv.imshow("Yellow Lane", yellow_lane)
+            update_timing = measurement.measure('check_update')
+            gray_roi = cv.cvtColor(modified_frame, cv.COLOR_RGB2GRAY)
+            _, gray_roi = cv.threshold(gray_roi, thresh=130, maxval=255, type=cv.THRESH_BINARY)
+            needs_update, diff_value = optimizer.needs_update(gray_roi)
+            update_timing.finish()
 
-            # segment white lane
-            white_timing = measurement.measure('White')
-            white_lane = Pipeline.extract_white_lane(modified_frame)
-            white_timing.finish()
-            cv.imshow("White Lane", white_lane)
+            optimizer_debug_frame = optimizer.draw_debug_img(gray_roi)
+            cv.imshow('Optimizer Diff', optimizer_debug_frame)
 
-            # combine white and yellow lane
-            white_yellow = cv.bitwise_or(yellow_lane, white_lane)
-            white_yellow = cv.cvtColor(white_yellow, cv.COLOR_RGB2GRAY)
-            # cv.imshow("white_yellow", white_yellow)
+            if needs_update:
+                # segment white lane
+                white_timing.reset()
+                white_lane = Pipeline.extract_white_lane(modified_frame)
+                white_timing.finish()
+                cv.imshow("White Lane", white_lane)
 
-            needs_update, diff_value = optimizer.needs_update(white_yellow)
+                # segment yellow lane
+                yellow_timing.reset()
+                yellow_lane = Pipeline.extract_yellow_lane(modified_frame)
+                yellow_timing.finish()
+                cv.imshow("Yellow Lane", yellow_lane)
 
-            # make canny edge detection and apply the roi to it
-            canny = Pipeline.canny_edge_detection(white_yellow)
-            cv.imshow("Canny", canny)
+                # combine white and yellow lane
+                white_yellow = cv.bitwise_or(yellow_lane, white_lane)
+                white_yellow = cv.cvtColor(white_yellow, cv.COLOR_RGB2GRAY)
+                # cv.imshow("white_yellow", white_yellow)
 
-            # dilate canny
-            # dilated_canny = Pipeline.dilate(canny)
-            # cv.imshow("Dilated Canny", dilated_canny)
+                # make canny edge detection and apply the roi to it
+                canny_timing.reset()
+                canny = Pipeline.canny_edge_detection(white_yellow)
+                canny_timing.finish()
+                cv.imshow("Canny", canny)
 
-            curve_timing = measurement.measure('Curve Fitting')
+                # dilate canny
+                # dilated_canny = Pipeline.dilate(canny)
+                # cv.imshow("Dilated Canny", dilated_canny)
 
-            # curve transformation
-            left, right = Pipeline.split_left_right(canny)
-            # cv.imshow("left", left)
-            # cv.imshow("right", right)
-            x1, y1 = CurveFitter.fit_curve_polyfit(left)
-            x2, y2 = CurveFitter.fit_curve_polyfit(right)
-            frame = CurveFitter.draw_area(frame, x1, y1, x2, y2)
-            # frame[x1, y1] = (0, 0, 255)
-            # frame[x2, y2] = (0, 0, 255)
-            curve_timing.finish()
+                # curve transformation
+                curve_timing.reset()
+                left, right = Pipeline.split_left_right(canny)
+                # cv.imshow("left", left)
+                # cv.imshow("right", right)
+                x1, y1 = CurveFitter.fit_curve_polyfit(left)
+                x2, y2 = CurveFitter.fit_curve_polyfit(right)
+                # frame[x1, y1] = (0, 0, 255)
+                # frame[x2, y2] = (0, 0, 255)
+                curve_timing.finish()
+
+            draw_timing = measurement.measure('draw_area')
+            area = CurveFitter.poly_area(modified_frame, x1, y1, x2, y2)
+            area = roi.reverse(area)
+            frame = cv.addWeighted(frame, 1, area, 0.3, 0)
+            draw_timing.finish()
 
             # cv.imshow("curved", frame)
             # ---------- Transform the %resulting images perspective ----------- #
@@ -125,9 +146,12 @@ def main():
             if needs_update:
                 measurement.drawText(final_frame, 'Update', 5)
 
+            measurement.drawTiming(final_frame, update_timing, 4)
+            measurement.drawTiming(final_frame, white_timing, 3)
             measurement.drawTiming(final_frame, yellow_timing, 2)
-            measurement.drawTiming(final_frame, white_timing, 1)
+            measurement.drawTiming(final_frame, canny_timing, 1)
             measurement.drawTiming(final_frame, curve_timing, 0)
+            measurement.drawTiming(final_frame, draw_timing, 5)
 
             cv.imshow('Final', final_frame)
 
