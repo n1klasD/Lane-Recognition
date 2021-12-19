@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 
 H_LOWER_Y = 10
 S_LOWER_Y = 80
-V_LOWER_Y = 150  # 100
+V_LOWER_Y = 100  # 100
 
 H_UPPER_Y = 30
 S_UPPER_Y = 255
@@ -84,7 +84,7 @@ class Pipeline:
         # improve the contrast of the frame by applying a linear point operation using a lookup table
         improved_contrast = cv.LUT(frame, lookup_table_contrast)
 
-        cv.imshow("Test", improved_contrast)
+        # cv.imshow("Test", improved_contrast)
 
         # select the white lines/s using thresholding
         ret, new_frame = cv.threshold(improved_contrast, thresh=THRESH_LOWER, maxval=THRESH_UPPER,
