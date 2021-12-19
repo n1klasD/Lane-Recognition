@@ -108,10 +108,6 @@ def main():
 
             final_curvature = np.average(curv_buffer)
 
-            # Inverse transform points and draw poly on original image
-            inverse_timing = measurement.measure("Inverse Transformation")
-            inverse_timing.finish()
-
             # ---------- Transform the %resulting images perspective ----------- #
 
             measurement.endFrame()
@@ -127,9 +123,8 @@ def main():
                 measurement.drawText(final_frame, 'Update', 5)
 
             measurement.drawTiming(final_frame, lane_extraction_timing, 2)
-            measurement.drawTiming(final_frame, inverse_timing, 3)
-            measurement.drawTiming(final_frame, curve_timing, 4)
-            measurement.drawTiming(final_frame, curvature_timing, 5)
+            measurement.drawTiming(final_frame, curve_timing, 3)
+            measurement.drawTiming(final_frame, curvature_timing, 4)
 
             cv.imshow('Lane Detection', final_frame)
 
