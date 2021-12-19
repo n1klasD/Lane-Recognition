@@ -44,8 +44,12 @@ class ROI:
         else:
             masked = cv.bitwise_and(self.mask_color, img)
 
-        return self.crop_to_content(masked) if do_crop else masked
+        result = self.crop_to_content(masked) if do_crop else masked
+        return self.scale_image(result, scale=0.7)
 
+    def scale_image(self, img, scale=1.0):
+        dsize = (int(img.shape[1] * scale), int(img.shape[0] * scale))
+        return cv.resize(img, dsize=dsize, interpolation=cv.INTER_CUBIC)
 
     def crop_to_content(self, img):
         from_x = self.outer_points_np[0][0]
@@ -55,6 +59,23 @@ class ROI:
         to_y = self.outer_points_np[0][1]
 
         return img[from_y:to_y, from_x:to_x]
+
+    def reverse(self, img):
+        from_x = self.outer_points_np[0][0]
+        to_x = self.outer_points_np[1][0]
+
+        from_y = self.outer_points_np[2][1]
+        to_y = self.outer_points_np[0][1]
+
+        new_size = (to_x - from_x, to_y - from_y)
+        resized = cv.resize(img, dsize=new_size, interpolation=cv.INTER_CUBIC)
+
+        (h, w, *rest) = resized.shape
+        new_shape = (self.mask_gray.shape[0], self.mask_gray.shape[1], *rest)
+        new_img = np.zeros(new_shape, np.uint8)
+        new_img[from_y:to_y, from_x:to_x] = resized
+
+        return new_img
 
     def draw_roi(self, img):
         img = img.copy()

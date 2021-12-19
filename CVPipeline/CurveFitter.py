@@ -23,15 +23,12 @@ class CurveFitter:
         x = w[0]
         y = w[1]
 
-        xn = np.arange(frame.shape[1] - 1)  # x-Koordinaten
+        xn = np.arange(frame.shape[1])  # x-Koordinaten
         g = np.polyfit(y, x, 2)
         ar = np.poly1d(g)
         y = np.int32(ar(xn))
-        # only return plausible points for the image
-        # todo: Constants
-        mask = (y >= 0) & (y < frame.shape[0]) & (y >= 450) & (y < 674)
 
-        return y[mask], xn[mask]
+        return y, xn
 
     @staticmethod
     def stack_points(x1, y1, x2, y2):
@@ -39,6 +36,13 @@ class CurveFitter:
         B = np.stack((y2, x2), axis=-1)
         C = np.concatenate((A, B))
         return C
+
+    @staticmethod
+    def poly_area(frame, x1, y1, x2, y2):
+        C = CurveFitter.stack_points(x1, y2, x2, y2)
+        empty_img = np.zeros_like(frame)
+        cv.fillPoly(empty_img, [C.astype(np.int32)], (0, 255, 0))
+        return empty_img
 
     @staticmethod
     def draw_area(frame, x1, y1, x2, y2):

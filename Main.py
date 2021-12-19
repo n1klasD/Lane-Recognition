@@ -19,6 +19,8 @@ def main():
     optimizer = CVPipeline.Optimizer(1.4, max_cached_frames=15)
     measurement = CVPipeline.Measurement(target_time=50)
 
+    x1 = y1 = x2 = y2 = 0
+
     # camera calibration
     # get calibration images
     if config.ACTIVATE_CAMERA_CALIBRATION:
@@ -63,7 +65,7 @@ def main():
             # blurring
             modified_frame = Pipeline.gaussian_blur(frame)
             # crop a ROI from the image
-            modified_frame = roi.apply_roi(modified_frame, do_crop=False)
+            modified_frame = roi.apply_roi(modified_frame, do_crop=True)
             # cv.imshow("ROI", modified_frame)
             # todo: maybe also crop video
             # apply the camera calibration
@@ -105,10 +107,13 @@ def main():
             # cv.imshow("right", right)
             x1, y1 = CurveFitter.fit_curve_polyfit(left)
             x2, y2 = CurveFitter.fit_curve_polyfit(right)
-            frame = CurveFitter.draw_area(frame, x1, y1, x2, y2)
             # frame[x1, y1] = (0, 0, 255)
             # frame[x2, y2] = (0, 0, 255)
             curve_timing.finish()
+
+            area = CurveFitter.poly_area(modified_frame, x1, y1, x2, y2)
+            area = roi.reverse(area)
+            frame = cv.addWeighted(frame, 1, area, 0.3, 0)
 
             # cv.imshow("curved", frame)
             # ---------- Transform the %resulting images perspective ----------- #
