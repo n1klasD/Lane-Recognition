@@ -33,10 +33,9 @@ def main():
     # open video
     cap = cv.VideoCapture('resources/Udacity/project_video.mp4')
     # configure camera
-    cap.set(cv.CAP_PROP_FPS, 240)
     # start video playback at critical point, where street changes color
     # START_POINT = 0 # Start
-    START_POINT = 500  # first critical part
+    START_POINT = 700  # first critical part
     cap.set(cv.CAP_PROP_POS_FRAMES, START_POINT)
     # Check if camera opened successfully
     if not cap.isOpened():
@@ -75,28 +74,26 @@ def main():
             yellow_timing = measurement.measure('Yellow')
             yellow_lane = Pipeline.extract_yellow_lane(modified_frame)
             yellow_timing.finish()
-            # cv.imshow("Yellow Lane", yellow_lane)
-
+            cv.imshow("Yellow Lane", yellow_lane)
 
             # segment white lane
             white_timing = measurement.measure('White')
             white_lane = Pipeline.extract_white_lane(modified_frame)
             white_timing.finish()
-            # cv.imshow("White Lane", white_lane)
+            cv.imshow("White Lane", white_lane)
 
             # combine white and yellow lane
             white_yellow = cv.bitwise_or(yellow_lane, white_lane)
             white_yellow = cv.cvtColor(white_yellow, cv.COLOR_RGB2GRAY)
             # cv.imshow("white_yellow", white_yellow)
 
-            # combine canny and white/yellow
-            # modified_frame = cv.bitwise_or(canny, white_yellow)
-            # modified_frame = cv.bitwise_or(canny, white_yellow)
-
             # make canny edge detection and apply the roi to it
             canny = Pipeline.canny_edge_detection(white_yellow)
-            # canny = roi.apply_roi(canny)
             cv.imshow("Canny", canny)
+
+            # dilate canny
+            # dilated_canny = Pipeline.dilate(canny)
+            # cv.imshow("Dilated Canny", dilated_canny)
 
             curve_timing = measurement.measure('Curve Fitting')
 
@@ -107,13 +104,13 @@ def main():
             x1, y1 = CurveFitter.fit_curve_polyfit(left)
             x2, y2 = CurveFitter.fit_curve_polyfit(right)
             frame = CurveFitter.draw_area(frame, x1, y1, x2, y2)
-            frame[x1, y1] = (0, 0, 255)
-            frame[x2, y2] = (0, 0, 255)
+            # frame[x1, y1] = (0, 0, 255)
+            # frame[x2, y2] = (0, 0, 255)
             curve_timing.finish()
-            
-            cv.imshow("curved", frame)
+
+            # cv.imshow("curved", frame)
             # ---------- Transform the %resulting images perspective ----------- #
-            cv.imshow('Lane Detection', modified_frame)
+            # cv.imshow('Lane Detection', modified_frame)
 
             measurement.endFrame()
             final_frame = frame.copy()
@@ -127,8 +124,6 @@ def main():
 
             # apply the perspective transform
             frame = perspective_transform.transform(frame)
-
-
 
             # cv.imshow('perspective transform', frame)
             # -----------------------------------------

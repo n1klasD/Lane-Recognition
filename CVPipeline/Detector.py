@@ -27,7 +27,6 @@ beta = -300
 c = np.arange(0, 256)
 lookup_table_contrast = np.clip(alpha * c + beta, 0, 255).astype(np.uint8)
 
-
 # plotting the gradation curve
 # x = np.linspace(0, 255, 256)
 # y = alpha * x + beta
@@ -37,6 +36,22 @@ lookup_table_contrast = np.clip(alpha * c + beta, 0, 255).astype(np.uint8)
 # plt.plot(x, y)
 # plt.title('Gradationskurve')
 # plt.show()
+
+kernel = np.array([[0, 1, 0],
+                   [1, 1, 1],
+                   [0, 1, 0]], dtype=np.uint8)
+
+iterations = 2
+
+
+# HLS
+H_LOWER_W = 0
+L_LOWER_W = 220
+S_LOWER_W = 0  # 100
+
+H_UPPER_W = 255
+L_UPPER_W = 255
+S_UPPER_W = 255
 
 
 class Pipeline:
@@ -90,7 +105,7 @@ class Pipeline:
         frame_hls = cv.cvtColor(frame, cv.COLOR_RGB2HLS)
 
         # filter out the yellow parts of the image
-        frame_white = cv.inRange(frame_hls, (0, 200, 0), (255, 255, 255))
+        frame_white = cv.inRange(frame_hls, (H_LOWER_W, L_LOWER_W, S_LOWER_W), (H_UPPER_W, L_UPPER_W, S_UPPER_W))
         new_frame[frame_white == 0] = 0
         new_frame[frame_white != 0] = 255
 
@@ -134,3 +149,7 @@ class Pipeline:
         frame_right[:, 0:half_width + 10] = 0
 
         return frame_right, frame_left
+
+    @staticmethod
+    def dilate(frame):
+        return cv.dilate(frame, kernel=kernel, iterations=iterations)

@@ -8,23 +8,37 @@ from matplotlib import pyplot as plt
 
 class CurveFitter:
 
+    def __init__(self):
+        pass
+
+    def generate_overlay(self, frame):
+        pass
+
     @staticmethod
-    def fit_curve_polyfit(img):
-        new_frame = img.copy()
-        w = np.where(new_frame != 0)
+    def fit_curve_polyfit(frame):
+        """
+        Fit the points of one lane image with a second order polynomial
+        """
+        w = np.where(frame != 0)
         x = w[0]
         y = w[1]
 
         xn = np.arange(1270 - 1)  # x-Koordinaten
+        g = np.polyfit(y, x, 2)
 
-        ar = np.poly1d(np.polyfit(y, x, 2))
+        ar = np.poly1d(g)
         y = np.int32(ar(xn))
+        # only return plausible points for the image
+        # todo: Constants
         mask = (y >= 0) & (y >= 450) & (y < 674)
-        # [( int(y[i]),x) for i,x in enumerate(xn) if y[i] >=0 and y[i] <= 720]
+
         return y[mask], xn[mask]
 
     @staticmethod
     def draw_area(frame, x1, y1, x2, y2):
+        """
+        Draw the area on screen, that the points (x1,y1), (x2,y2) surround
+        """
         new_frame = frame.copy()
 
         A = np.stack((y1, x1), axis=-1)
